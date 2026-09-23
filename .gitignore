@@ -8,6 +8,8 @@ dist-ssr/
 frontend/dist/
 frontend/dist-ssr/
 build/
+tools/
+*.exe
 
 # Python caches and bytecode
 __pycache__/
