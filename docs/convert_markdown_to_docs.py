@@ -411,6 +411,12 @@ def main():
             "docx": os.path.join(docs_dir, "SIH26170_File_and_Data_Documentation.docx"),
             "pdf": os.path.join(docs_dir, "SIH26170_File_and_Data_Documentation.pdf"),
             "title": "SIH26170 File Structure & Data Documentation"
+        },
+        {
+            "md": os.path.join(docs_dir, "SIH26170_Deployment_and_Architecture_Guide.md"),
+            "docx": os.path.join(docs_dir, "SIH26170_Deployment_and_Architecture_Guide.docx"),
+            "pdf": os.path.join(docs_dir, "SIH26170_Deployment_and_Architecture_Guide.pdf"),
+            "title": "SIH26170 Deployment & Architecture Guide"
         }
     ]
 
