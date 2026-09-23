@@ -1,7 +1,12 @@
-from fastapi import FastAPI, Depends, Query, HTTPException
+from pathlib import Path
+from fastapi import FastAPI, Depends, Query, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, FileResponse
+from fastapi.staticfiles import StaticFiles
 import math
+
+BASE_DIR = Path(__file__).resolve().parent.parent
+FRONTEND_DIST = BASE_DIR / "frontend" / "dist"
 
 # Use our new pandas-based data loader
 import data_loader
@@ -11,12 +16,7 @@ app = FastAPI(title="SIH26170 Backend")
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[
-        "http://localhost:5173",
-        "http://127.0.0.1:5173",
-        "http://localhost:5174",
-        "http://127.0.0.1:5174",
-    ],
+    allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -26,7 +26,12 @@ app.add_middleware(
 app.include_router(operational_router)
 
 @app.get("/")
-def health_check():
+def health_check(request: Request):
+    accept = request.headers.get("accept", "")
+    if "text/html" in accept and FRONTEND_DIST.exists():
+        index_file = FRONTEND_DIST / "index.html"
+        if index_file.exists():
+            return FileResponse(index_file)
     return {"status": "ok", "message": "SIH26170 Backend is running"}
 
 @app.get("/api/analysis/search")
@@ -191,3 +196,24 @@ def get_device_specs():
 @app.get("/api/reference/dictionary")
 def get_data_dictionary():
     return data_loader.schema_dictionary_df.to_dict(orient="records")
+
+# Mount static assets if frontend production build exists
+if FRONTEND_DIST.exists():
+    assets_dir = FRONTEND_DIST / "assets"
+    if assets_dir.exists():
+        app.mount("/assets", StaticFiles(directory=assets_dir), name="assets")
+
+    @app.get("/{full_path:path}")
+    def serve_frontend_spa(request: Request, full_path: str):
+        if full_path.startswith("api/") or full_path.startswith("docs") or full_path.startswith("openapi.json"):
+            raise HTTPException(status_code=404, detail="Not Found")
+        
+        target = FRONTEND_DIST / full_path
+        if target.exists() and target.is_file():
+            return FileResponse(target)
+        
+        index_file = FRONTEND_DIST / "index.html"
+        if index_file.exists():
+            return FileResponse(index_file)
+        raise HTTPException(status_code=404, detail="Frontend build not found")
+

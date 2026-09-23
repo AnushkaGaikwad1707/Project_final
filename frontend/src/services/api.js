@@ -1,4 +1,8 @@
-const BASE_URL = 'http://127.0.0.1:8001';
+// Base API configuration supporting both local development and deployed single-origin architectures
+const BASE_URL = import.meta.env.VITE_API_URL || 
+  (typeof window !== 'undefined' && window.location.hostname === 'localhost' && window.location.port === '5174'
+    ? 'http://127.0.0.1:8001' 
+    : '');
 
 class ApiError extends Error {
   constructor(message, status) {
