@@ -24,8 +24,9 @@ SCHEMA_PATH = Path(__file__).resolve().parent / "Operational_DB_Schema.sql"
 def get_connection():
     """
     Create a connection to the operational SQLite database.
+    Auto-initializes tables from schema if database file does not exist.
     """
-
+    db_exists = DATABASE_PATH.exists()
     connection = sqlite3.connect(DATABASE_PATH)
 
     # Enable foreign-key constraints
@@ -33,6 +34,11 @@ def get_connection():
 
     # Return rows that can be accessed by column name
     connection.row_factory = sqlite3.Row
+
+    if not db_exists and SCHEMA_PATH.exists():
+        schema_sql = SCHEMA_PATH.read_text(encoding="utf-8")
+        connection.executescript(schema_sql)
+        connection.commit()
 
     return connection
 
