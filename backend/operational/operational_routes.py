@@ -22,12 +22,13 @@ class MeasurementInput(BaseModel):
 
     epoch_h: int = Field(..., description="Allowed values: 0, 24, 96, 168")
 
-    IDDQ: float
-    Input_Leakage_Current: float
-    Active_Supply_Current: float
-    Propagation_Delay: float
-    Output_Rise_Time: float
-    Output_Fall_Time: float
+    IDDQ: Optional[float] = None
+    Input_Leakage_Current: Optional[float] = None
+    Active_Supply_Current: Optional[float] = None
+    Propagation_Delay: Optional[float] = None
+    Output_Rise_Time: Optional[float] = None
+    Output_Fall_Time: Optional[float] = None
+    measurements: Optional[dict] = None
 
     measured_at: Optional[str] = None
 
@@ -59,6 +60,12 @@ def validate_measurement(data: MeasurementInput):
             detail="epoch_h must be 0, 24, 96, or 168"
         )
 
+    # Support nested measurements if provided
+    if data.measurements and isinstance(data.measurements, dict):
+        for k in ["IDDQ", "Input_Leakage_Current", "Active_Supply_Current", "Propagation_Delay", "Output_Rise_Time", "Output_Fall_Time"]:
+            if getattr(data, k) is None and k in data.measurements:
+                setattr(data, k, float(data.measurements[k]))
+
     measurements = {
         "IDDQ": data.IDDQ,
         "Input_Leakage_Current": data.Input_Leakage_Current,
@@ -69,7 +76,11 @@ def validate_measurement(data: MeasurementInput):
     }
 
     for parameter, value in measurements.items():
-
+        if value is None:
+            raise HTTPException(
+                status_code=400,
+                detail=f"{parameter} is required"
+            )
         if value <= 0:
             raise HTTPException(
                 status_code=400,
