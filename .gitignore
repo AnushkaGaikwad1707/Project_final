@@ -3,10 +3,11 @@ node_modules/
 frontend/node_modules/
 
 # Production builds
-dist/
+/dist/
 dist-ssr/
-frontend/dist/
 frontend/dist-ssr/
+!frontend/dist/
+!frontend/dist/**
 build/
 tools/
 *.exe
